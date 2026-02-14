@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { RequestActions } from "./RequestActions";
 
@@ -6,7 +7,11 @@ const base =
   process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 async function getRequest(id: string) {
-  const res = await fetch(`${base}/api/requests`, { cache: "no-store" });
+  const cookieStore = await cookies();
+  const res = await fetch(`${base}/api/requests`, {
+    cache: "no-store",
+    headers: { Cookie: cookieStore.toString() },
+  });
   if (!res.ok) return null;
   const requests = await res.json();
   return requests.find((r: { id: string }) => r.id === id) ?? null;
@@ -19,9 +24,9 @@ function StatusBadge({ status }: { status: string }) {
     rejected: "bg-red-100 text-red-800",
   };
   const labels: Record<string, string> = {
-    pending: "Pendente",
-    approved: "Aprovado",
-    rejected: "Rejeitado",
+    pending: "Pending",
+    approved: "Approved",
+    rejected: "Rejected",
   };
   return (
     <span
@@ -60,7 +65,7 @@ export default async function RequestDetailsPage({
         href="/dashboard"
         className="mb-6 inline-block text-sm text-zinc-600 hover:text-zinc-900"
       >
-        ← Voltar ao Dashboard
+        ← Back to Dashboard
       </Link>
 
       <div className="rounded-lg border border-zinc-200 bg-white p-6">
@@ -70,14 +75,14 @@ export default async function RequestDetailsPage({
         </div>
 
         <p className="mb-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
-          Criado em
+          Created at
         </p>
         <p className="mb-6 text-sm text-zinc-600">{formatDate(req.created_at)}</p>
 
         {req.ai_summary && (
           <>
             <p className="mb-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
-              Resumo (IA)
+              AI Summary
             </p>
             <p className="mb-6 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
               {req.ai_summary}
@@ -86,7 +91,7 @@ export default async function RequestDetailsPage({
         )}
 
         <p className="mb-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
-          Descrição
+          Description
         </p>
         <p className="mb-8 whitespace-pre-wrap text-zinc-700">{req.description}</p>
 

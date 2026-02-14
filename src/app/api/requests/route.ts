@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateSummary } from "@/lib/ai";
+import { getUserProfile } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/requests - Retorna todas as solicitações
 export async function GET() {
   try {
+    const profile = await getUserProfile();
+    if (!profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const requests = await prisma.request.findMany({
       orderBy: { created_at: "desc" },
+      include: { requester: { include: { role: true, sector: true } } },
     });
     return NextResponse.json(requests);
   } catch (error) {
@@ -18,9 +23,13 @@ export async function GET() {
   }
 }
 
-// POST /api/requests - Cria uma nova solicitação
 export async function POST(request: NextRequest) {
   try {
+    const profile = await getUserProfile();
+    if (!profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { title, description } = body;
 
@@ -40,6 +49,7 @@ export async function POST(request: NextRequest) {
         title: titleStr,
         description: descriptionStr,
         ai_summary,
+        requester_id: profile.id,
       },
     });
 

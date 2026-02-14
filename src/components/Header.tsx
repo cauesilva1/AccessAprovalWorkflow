@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeaderAuth } from "./HeaderAuth";
 
 export function Header() {
   return (
@@ -10,20 +11,7 @@ export function Header() {
         >
           Approval Workflow
         </Link>
-        <nav className="flex gap-6">
-          <Link
-            href="/dashboard"
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/dashboard?open=new"
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
-          >
-            Nova Solicitação
-          </Link>
-        </nav>
+        <HeaderAuth />
       </div>
     </header>
   );

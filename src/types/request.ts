@@ -5,4 +5,11 @@ export interface RequestItem {
   ai_summary: string;
   status: string;
   created_at: string;
+  requester?: {
+    id: string;
+    email: string;
+    name: string | null;
+    role: { name: string };
+    sector: { name: string };
+  };
 }

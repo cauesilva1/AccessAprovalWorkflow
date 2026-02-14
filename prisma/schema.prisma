@@ -10,11 +10,38 @@ datasource db {
   provider = "postgresql"
 }
 
+model Sector {
+  id    String   @id @default(uuid())
+  name  String   @unique
+  users User[]
+}
+
+model Role {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  hierarchy_level Int      // 1=employee, 2=supervisor, 3=manager, 4=general_manager
+  users           User[]
+}
+
+model User {
+  id           String    @id @default(uuid())
+  auth_user_id String    @unique
+  email        String
+  name         String?
+  role_id      String
+  sector_id    String
+  role         Role      @relation(fields: [role_id], references: [id])
+  sector       Sector    @relation(fields: [sector_id], references: [id])
+  requests     Request[]
+}
+
 model Request {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  ai_summary  String   @default("")
-  status      String   @default("pending") // pending | approved | rejected
-  created_at  DateTime @default(now())
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  ai_summary   String   @default("")
+  status       String   @default("pending") // pending | approved | rejected
+  requester_id String?
+  requester    User?    @relation(fields: [requester_id], references: [id])
+  created_at   DateTime @default(now())
 }
