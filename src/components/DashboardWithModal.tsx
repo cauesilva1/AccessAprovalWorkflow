@@ -9,6 +9,7 @@ import type { RequestItem } from "@/types/request";
 interface DashboardWithModalProps {
   requests: RequestItem[];
   error: string | null;
+  groupBySector?: boolean;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -33,7 +34,82 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function DashboardWithModal({ requests, error }: DashboardWithModalProps) {
+function RequestList({
+  requests,
+  StatusBadge,
+}: {
+  requests: RequestItem[];
+  StatusBadge: React.FC<{ status: string }>;
+}) {
+  return (
+    <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-white">
+      {requests.map((req) => (
+        <li key={req.id}>
+          <Link
+            href={`/requests/${req.id}`}
+            className="block p-4 hover:bg-zinc-50"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h2 className="font-medium text-zinc-900">{req.title}</h2>
+                {req.requester && (
+                  <p className="text-xs text-zinc-500">
+                    {req.requester.email} · {req.requester.role.name} ·{" "}
+                    {req.requester.sector.name}
+                  </p>
+                )}
+                {req.ai_summary ? (
+                  <p className="mt-1 rounded bg-amber-50 px-2 py-1 text-sm text-amber-900">
+                    {req.ai_summary}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm italic text-zinc-400">No summary</p>
+                )}
+              </div>
+              <StatusBadge status={req.status} />
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function RequestListBySector({
+  requests,
+  StatusBadge,
+}: {
+  requests: RequestItem[];
+  StatusBadge: React.FC<{ status: string }>;
+}) {
+  const bySector = requests.reduce<Record<string, RequestItem[]>>((acc, req) => {
+    const sector = req.requester?.sector?.name ?? "No sector";
+    if (!acc[sector]) acc[sector] = [];
+    acc[sector].push(req);
+    return acc;
+  }, {});
+
+  const sectors = Object.keys(bySector).sort();
+
+  return (
+    <div className="space-y-8">
+      {sectors.map((sector) => (
+        <section key={sector}>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+            {sector}
+          </h2>
+          <RequestList requests={bySector[sector]} StatusBadge={StatusBadge} />
+        </section>
+      ))}
+    </div>
+  );
+}
+
+export function DashboardWithModal({
+  requests,
+  error,
+  groupBySector = false,
+}: DashboardWithModalProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const showModal = searchParams.get("open") === "new";
@@ -76,36 +152,10 @@ export function DashboardWithModal({ requests, error }: DashboardWithModalProps)
               Create the first one
             </button>
           </div>
+        ) : groupBySector ? (
+          <RequestListBySector requests={requests} StatusBadge={StatusBadge} />
         ) : (
-          <ul className="divide-y divide-zinc-200 rounded-lg border border-zinc-200 bg-white">
-            {requests.map((req) => (
-              <li key={req.id}>
-                <Link
-                  href={`/requests/${req.id}`}
-                  className="block p-4 hover:bg-zinc-50"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <h2 className="font-medium text-zinc-900">{req.title}</h2>
-                    {req.requester && (
-                      <p className="text-xs text-zinc-500">
-                        {req.requester.email} · {req.requester.role.name} · {req.requester.sector.name}
-                      </p>
-                    )}
-                    {req.ai_summary ? (
-                      <p className="mt-1 rounded bg-amber-50 px-2 py-1 text-sm text-amber-900">
-                        {req.ai_summary}
-                      </p>
-                    ) : (
-                      <p className="mt-1 text-sm italic text-zinc-400">No summary</p>
-                    )}
-                  </div>
-                    <StatusBadge status={req.status} />
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <RequestList requests={requests} StatusBadge={StatusBadge} />
         )}
       </div>
 

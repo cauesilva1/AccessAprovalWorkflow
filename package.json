@@ -13,6 +13,7 @@
     "db:studio": "prisma studio",
     "test:day1": "tsx scripts/test-day1.ts",
     "test:phase1": "tsx scripts/test-phase1.ts",
+    "test:phase2": "tsx scripts/test-phase2.ts",
     "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {

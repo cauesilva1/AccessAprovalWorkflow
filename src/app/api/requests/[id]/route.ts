@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserProfile } from "@/lib/auth";
+import { canViewRequest } from "@/lib/visibility";
 import { prisma } from "@/lib/prisma";
 
 const VALID_STATUSES = ["approved", "rejected"] as const;
@@ -29,6 +30,17 @@ export async function PATCH(
         { error: "status must be 'approved' or 'rejected'" },
         { status: 400 }
       );
+    }
+
+    const existing = await prisma.request.findUnique({
+      where: { id },
+      include: { requester: { include: { role: true } } },
+    });
+    if (!existing) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+    if (!canViewRequest(profile, existing)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const updated = await prisma.request.update({

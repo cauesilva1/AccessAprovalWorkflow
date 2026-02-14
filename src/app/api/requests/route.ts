@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateSummary } from "@/lib/ai";
 import { getUserProfile } from "@/lib/auth";
+import { getRequestsWhereClause } from "@/lib/visibility";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -9,7 +10,9 @@ export async function GET() {
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const where = getRequestsWhereClause(profile);
     const requests = await prisma.request.findMany({
+      where,
       orderBy: { created_at: "desc" },
       include: { requester: { include: { role: true, sector: true } } },
     });
