@@ -1,0 +1,20 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Request {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  ai_summary  String   @default("")
+  status      String   @default("pending") // pending | approved | rejected
+  created_at  DateTime @default(now())
+}
